@@ -3,7 +3,7 @@
 
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import re
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
@@ -204,7 +204,9 @@ def view_expense_history(update: Update, context: CallbackContext) -> None:
 # Hàm chuyển đổi ngày thành chuỗi
 def convert_to_str(date):
     if isinstance(date, int):
-        return datetime.utcfromtimestamp(date).strftime("%Y-%m-%d %H:%M:%S")
+        utc_time = datetime.utcfromtimestamp(date)
+        hanoi_time = utc_time.replace(tzinfo=timezone.utc).astimezone(timezone(timedelta(hours=7)))
+        return hanoi_time.strftime("%Y-%m-%d %H:%M:%S")
     return date
 # Hàm lấy lịch sử chi tiêu
 def get_expense_history(user_id):
