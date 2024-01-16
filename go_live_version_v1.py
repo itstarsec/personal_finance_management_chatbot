@@ -1,4 +1,3 @@
-# TOKEN = '1042835941:AAGB6qaHY8ml-GspYcSpKi3_119mtLumySo'
 # -*- coding: utf-8 -*-
 
 from locale import setlocale, LC_ALL
@@ -11,7 +10,6 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 import sqlite3
 from sqlite3 import connect, Row
 
-# Thiết lập logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 def init_database():
@@ -37,14 +35,6 @@ def init_database():
             amount INTEGER,
             date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    ''')
-    conn.execute('''
-    CREATE TABLE IF NOT EXISTS expense_history (
-        user_id INTEGER,
-        title TEXT,
-        amount INTEGER,
-        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
     ''')
     conn.commit()
     conn.row_factory = Row
@@ -142,9 +132,10 @@ def handle_message(update: Update, context: CallbackContext) -> None:
     if context.user_data.get('setting_budget', False):
         try:
             expenses = int(update.message.text.replace(',', ''))
-            cursor = get_sqlite_connection().cursor()
-            cursor.execute('INSERT OR REPLACE INTO budget (user_id, expenses, savings) VALUES (?, ?, 0)', (user_id, expenses))
-            get_sqlite_connection().commit()
+            connection = get_sqlite_connection()
+            with connection:
+                cursor = connection.cursor()
+                cursor.execute('INSERT OR REPLACE INTO budget (user_id, expenses, savings) VALUES (?, ?, 0)', (user_id, expenses))
             context.user_data['setting_budget'] = False
             remaining_budget = get_remaining_budget(user_id)
             formatted_remaining_budget = format_number_with_commas(remaining_budget)
@@ -155,9 +146,10 @@ def handle_message(update: Update, context: CallbackContext) -> None:
     elif context.user_data.get('updating_budget', False):
         try:
             expenses = int(update.message.text.replace(',', ''))
-            cursor = get_sqlite_connection().cursor()
-            cursor.execute('UPDATE budget SET expenses = ? WHERE user_id = ?', (expenses, user_id))
-            get_sqlite_connection().commit()
+            connection = get_sqlite_connection()
+            with connection:
+                cursor = connection.cursor()
+                cursor.execute('UPDATE budget SET expenses = ? WHERE user_id = ?', (expenses, user_id))
             context.user_data['updating_budget'] = False
             remaining_budget = get_remaining_budget(user_id)
             formatted_remaining_budget = format_number_with_commas(remaining_budget)
@@ -241,11 +233,17 @@ def show_help(update: Update, context: CallbackContext) -> None:
     /reset - Reset tất cả thông tin và quay lại bước thiết lập ngân sách.
     '''
     update.message.reply_text(help_message)
+def reset_expenses(user_id):
+    connection = get_sqlite_connection()
+    with connection:
+        cursor = connection.cursor()
+        cursor.execute('DELETE FROM expenses WHERE user_id = ?', (user_id,))
 
 def reset_all_data(update: Update, context: CallbackContext) -> None:
     user_id = update.message.from_user.id
     clear_all_expense_history(user_id)
     reset_budget(user_id)
+    reset_expenses(user_id)
     update.message.reply_text("Tất cả thông tin đã được reset. Bạn có thể bắt đầu lại bằng cách sử dụng /set.")
 
 def reset_budget(user_id):
@@ -255,7 +253,7 @@ def reset_budget(user_id):
         cursor.execute('DELETE FROM budget WHERE user_id = ?', (user_id,))
 
 def main() -> None:
-    updater = Updater("1042835941:AAGB6qaHY8ml-GspYcSpKi3_119mtLumySo")
+    updater = Updater("6408491360:AAHJMkUb8fc8NZWTKXrSEITpa1SJ4D0LNf0")
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", start))
@@ -263,7 +261,6 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("update", update_budget))
     dispatcher.add_handler(CommandHandler("check", check_remaining_budget))
     dispatcher.add_handler(CommandHandler("history", view_expense_history))
-    # dispatcher.add_handler(CommandHandler("clearhistory", clear_expense_history))
     dispatcher.add_handler(CommandHandler("help", show_help))
     dispatcher.add_handler(CommandHandler("reset", reset_all_data))
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
