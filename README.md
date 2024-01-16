@@ -29,7 +29,6 @@
 3. Server (SQLite Database): Dữ liệu người dùng được lưu trữ trong cơ sở dữ liệu SQLite trên máy chủ. Các hàm xử lý dữ liệu của người dùng được thực hiện thông qua các truy vấn SQL.
 
 Các tương tác chính:
-
 - Người dùng gửi lệnh hoặc tin nhắn văn bản.
 - Chatbot xử lý lệnh hoặc tin nhắn từ người dùng, thực hiện các hàm tương ứng.
 - Chatbot thực hiện các truy vấn cơ sở dữ liệu để lưu trữ và truy xuất thông tin về ngân sách và lịch sử chi tiêu của người dùng.
