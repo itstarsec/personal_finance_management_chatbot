@@ -1,5 +1,5 @@
 # personal_finance_management_chatbot
-
+```
 +-----------------+                +---------------------+               +-------------------+
 |    Client       |                |      Chatbot        |               |      Server       |
 |-----------------|                |---------------------|               |-------------------|
@@ -21,7 +21,7 @@
                               |  Database Operations |
                               |  Expense Management  |
                               +----------------------+
-
+```
 1. Client (Telegram App): Người dùng tương tác với chatbot thông qua Telegram App.
 
 2. Chatbot (Python Script): Bot chạy trên máy chủ và sử dụng thư viện Telegram để tương tác với người dùng. Nó chứa các hàm xử lý lệnh và thông điệp từ người dùng.
