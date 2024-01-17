@@ -45,7 +45,20 @@ def get_sqlite_connection():
     if not hasattr(get_sqlite_connection, 'connection'):
         get_sqlite_connection.connection = init_database()
     return get_sqlite_connection.connection
+    
+def get_total_budget(user_id):
+    connection = get_sqlite_connection()
+    with connection:
+        cursor = connection.cursor()
+        cursor.execute('SELECT expenses FROM budget WHERE user_id = ?', (user_id,))
+        result = cursor.fetchone()
 
+        if result is not None:
+            expenses = result['expenses']
+            return expenses
+        else:
+            return 0
+            
 def get_total_expenses(user_id):
     connection = get_sqlite_connection()
     with connection:
@@ -62,10 +75,16 @@ def format_number(number):
 # Hàm kiểm tra số tiền đã tiêu
 def check_remaining_budget(update, context):
     user_id = update.message.from_user.id
-    remaining_budget = get_remaining_budget(user_id)
-    total_expenses = get_total_expenses(user_id)
-    remaining_budget -= total_expenses
-    update.message.reply_text(f'Tổng số tiền đã chi tiêu: {format_number(total_expenses)}\nSố tiền còn lại có thể chi tiêu là {format_number(remaining_budget)}.')
+    total_budget = get_total_budget(user_id)
+    total_expense_history = get_total_expense_history(user_id)
+
+    remaining_budget = total_budget - total_expense_history
+    formatted_total_expense_history = format_number(total_expense_history)
+    formatted_remaining_budget = format_number_with_commas(remaining_budget)
+
+    update.message.reply_text(f'Tổng số tiền đã chi tiêu từ lịch sử: {formatted_total_expense_history}\n'
+                              f'Số tiền còn lại có thể chi tiêu là {formatted_remaining_budget}.')
+
    
 
 def get_total_expense_history(user_id):
@@ -86,12 +105,12 @@ def get_remaining_budget(user_id):
 
         if result is not None:
             expenses = result['expenses']
-            savings = result['savings']
+            # savings = result['savings']
 
             # Lấy tổng chi tiêu từ bảng expenses
             total_expenses = get_total_expenses(user_id)
 
-            remaining_budget = expenses - savings - total_expenses
+            remaining_budget = expenses - total_expenses
             return remaining_budget
         else:
             return 0
